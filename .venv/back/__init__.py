@@ -15,7 +15,7 @@ def create_app():
     from .auth import auth_bp
     from .sql import sql_bp
 
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(sql_bp, url_prefix='/sql')
 
     return app
