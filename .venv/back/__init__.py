@@ -15,9 +15,13 @@ def create_app():
     from .auth import auth_bp
     from .sql import sql_bp
     from .patch import patch_bp
+    from .dis import dis_bp
+    from .journal import journal_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(sql_bp, url_prefix='/sql')
     app.register_blueprint(patch_bp, url_prefix='/patch')
+    app.register_blueprint(dis_bp, url_prefix='/dis')
+    app.register_blueprint(journal_bp, url_prefix='/journal')
 
     return app
