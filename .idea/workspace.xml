@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ae1f6adf-8afd-49a6-84bb-d165a70154e0" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/PythonProject1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PythonProject1.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/db.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
