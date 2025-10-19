@@ -12,10 +12,20 @@ del_bp = Blueprint('del_bp', __name__)
 
 @del_bp.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    cur.execute("SELECT * FROM public.users;")
+    cur.execute("SELECT * FROM public.users WHERE inn = %s", (user_id,))
     rows = cur.fetchall()
     if not len(rows):
         return jsonify({"msg": f"User {user_id} not found"}), 404
     cur.execute('DELETE FROM users WHERE INN = %s', (user_id,))
     conn.commit()
     return jsonify({"msg": f"User {user_id} deleted successfully"}), 200
+
+@del_bp.route('/company/<int:ogrn>', methods=['DELETE'])
+def delete_company(ogrn):
+    cur.execute("SELECT * FROM public.company WHERE ogrn = %s", (ogrn,))
+    rows = cur.fetchall()
+    if not len(rows):
+        return jsonify({"msg": f"Company {ogrn} not found"}), 404
+    cur.execute('DELETE FROM company WHERE OGRN = %s', (ogrn,))
+    conn.commit()
+    return jsonify({"msg": f"Company {ogrn} deleted successfully"}), 200
