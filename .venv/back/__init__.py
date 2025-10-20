@@ -18,10 +18,12 @@ def create_app():
     from .dis import dis_bp
     from .journal import journal_bp
     from .delete_r import del_bp
+    from .add import add_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(sql_bp, url_prefix='/sql')
     app.register_blueprint(patch_bp, url_prefix='/patch')
     app.register_blueprint(dis_bp, url_prefix='/dis')
     app.register_blueprint(journal_bp, url_prefix='/journal')
     app.register_blueprint(del_bp, url_prefix='/del')
+    app.register_blueprint(add_bp, url_prefix='/add')
     return app
