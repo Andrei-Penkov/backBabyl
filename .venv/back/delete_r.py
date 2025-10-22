@@ -29,3 +29,13 @@ def delete_company(ogrn):
     cur.execute('DELETE FROM company WHERE OGRN = %s', (ogrn,))
     conn.commit()
     return jsonify({"msg": f"Company {ogrn} deleted successfully"}), 200
+
+@del_bp.route('/journal/<int:id>', methods=['DELETE'])
+def delete_journal_note(id):
+    cur.execute("SELECT * FROM public.journal WHERE id = %s", (id,))
+    rows = cur.fetchall()
+    if not len(rows):
+        return jsonify({"msg": f"Note with {id} not found"}), 404
+    cur.execute('DELETE FROM journal WHERE id = %s', (id,))
+    conn.commit()
+    return jsonify({"msg": f"Journal note {id} deleted successfully"}), 200
