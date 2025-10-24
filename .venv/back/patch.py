@@ -43,3 +43,74 @@ def patch_user():
     except Exception as e:
         conn.rollback()
         return jsonify(message=f"NOT OK {e}"), 400
+
+@patch_bp.route('/sch', methods=['PATCH'])
+# @role_required(['admin', 'moderator'])
+def patch_schedule():
+    try:
+        if not request.is_json:
+            return jsonify(error="NOT JSON"), 400
+
+        data = request.get_json()
+        schedule_id = data.get("id")
+        if not schedule_id:
+            return jsonify(error="Missing schedule id"), 400
+
+        updatable_fields = ["start", "stop", "pause", "free"]
+
+        sets = []
+        params = []
+
+        for field in updatable_fields:
+            if field in data and data[field] is not None:
+                sets.append(f"{field} = %s")
+                params.append(data[field])
+
+        if not sets:
+            return jsonify(message="No fields to update"), 400
+
+        params.append(schedule_id)
+        sql = f"UPDATE public.schedule SET {', '.join(sets)} WHERE id = %s;"
+
+        cur.execute(sql, tuple(params))
+        conn.commit()
+
+        return jsonify(message="Schedule updated"), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
+
+
+@patch_bp.route('/jour/note', methods=['PATCH'])
+# @role_required(['admin', 'moderator'])
+def patch_journal_note():
+    try:
+        if not request.is_json:
+            return jsonify(error="NOT JSON"), 400
+
+        data = request.get_json()
+        journal_id = data.get("id")
+        note = data.get("note")
+
+        if not all([journal_id]):
+            return jsonify(error="Missing required identifiers"), 400
+
+        if note is None:
+            return jsonify(error="Nothing to update"), 400
+
+        sql = """
+            UPDATE public.journal
+            SET note = %s
+            WHERE id = %s;
+        """
+
+        cur.execute(sql, (note, journal_id))
+        conn.commit()
+
+        return jsonify(message="Journal note updated"), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
+
