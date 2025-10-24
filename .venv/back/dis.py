@@ -85,31 +85,31 @@ def get_journal_entries():
         }
     })
 
-@dis_bp.route('/sch', methods=['GET'])
+@dis_bp.route('/sch', methods=['POST'])
 def get_schedules():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 10, type=int)
-    free = request.args.get("free", type=str)  # параметр поиска
+    data = request.get_json()
+    page = data.get("page", 1)
+    per_page = data.get("per_page", 10)
+    free = data.get("free")
 
     base_query = "SELECT * FROM public.schedule"
     params = []
 
     if free is not None:
         base_query += " WHERE free = %s"
-        params.append(free.lower() in ['true', '1', 'yes'])
+        params.append(free)
 
     base_query += " ORDER BY id DESC"
-    offset = (page - 1) * per_page
-    base_query += f" LIMIT {per_page} OFFSET {offset}"
+    paginated_query = paginate_query(base_query, page, per_page)
 
-    cur.execute(base_query, tuple(params))
+    cur.execute(paginated_query, tuple(params))
     rows = cur.fetchall()
     schedules = [ScheduleEntry(row) for row in rows]
 
     count_query = "SELECT COUNT(*) FROM public.schedule"
     if free is not None:
         count_query += " WHERE free = %s"
-        cur.execute(count_query, (params[0],))
+        cur.execute(count_query, (free,))
     else:
         cur.execute(count_query)
 
