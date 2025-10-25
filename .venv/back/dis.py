@@ -49,13 +49,93 @@ def ScheduleEntry(row):
     }
 
 
-@dis_bp.route('/users')
+@dis_bp.route('/users', methods=['GET'])
 def get_users():
-    cur.execute("SELECT * FROM public.users;")
-    rows = cur.fetchall()
-    users = [UserInfo(row) for row in rows]
+    search_fields = {
+        'inn': 'INN = %s',
+        'last_name': 'LOWER(last_name) LIKE LOWER(%s)',
+        'first_name': 'LOWER(first_name) LIKE LOWER(%s)',
+        'middle_name': 'LOWER(middle_name) LIKE LOWER(%s)',
+        'department_id': 'department_id = %s',
+        'role': 'LOWER(role) LIKE LOWER(%s)',
+        'company_ogrn': 'Company_OGRN = %s',
+        'schedule_id': 'Schedule_id = %s'
+    }
+
+    all_request_params = set(request.args.keys())
+
+
+    allowed_params = set(search_fields.keys())
+
+
+    invalid_params = all_request_params - allowed_params
+
+
+    if invalid_params:
+        return jsonify({
+            "error": "Недопустимые параметры поиска",
+            "invalid_params": list(invalid_params),
+            "allowed_params": list(allowed_params)
+        }), 400
+
+
+    search_params = {}
+    for field in search_fields.keys():
+        value = request.args.get(field)
+        if value:
+            search_params[field] = value.split('_')
+
+    if not search_params:
+        cur.execute("SELECT * FROM public.users ORDER BY last_name, first_name;")
+        rows = cur.fetchall()
+        rez = [UserInfo(row) for row in rows]
+    else:
+        from itertools import product
+
+        param_combinations = []
+        for field, values in search_params.items():
+            param_combinations.append([(field, value) for value in values])
+
+        all_combinations = product(*param_combinations)
+        rez = []
+
+        for combination in all_combinations:
+            where_conditions = []
+            values = []
+
+            for field, value in combination:
+                condition = search_fields[field]
+                if 'LIKE' in condition:
+                    values.append(f'%{value}%')
+                else:
+                    try:
+                        if field in ['inn', 'department_id', 'company_ogrn', 'schedule_id']:
+                            values.append(int(value))
+                        else:
+                            values.append(value)
+                    except ValueError:
+                        values.append(value)
+
+                where_conditions.append(condition)
+
+            where_clause = " AND ".join(where_conditions)
+            query = f"SELECT * FROM public.users WHERE {where_clause};"
+            cur.execute(query, values)
+
+            for row in cur.fetchall():
+                rez.append(UserInfo(row))
+
+    seen = set()
+    unique_rez = []
+    for item in rez:
+        item_key = tuple(sorted(item.items()))
+        if item_key not in seen:
+            seen.add(item_key)
+            unique_rez.append(item)
+    rez = unique_rez
+
     response = current_app.response_class(
-        json.dumps(users, sort_keys=False),
+        json.dumps(rez, sort_keys=False, ensure_ascii=False),
         mimetype='application/json'
     )
     return response

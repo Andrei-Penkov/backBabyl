@@ -25,7 +25,7 @@ def add_company():
         conn.rollback()
         return jsonify(message=f"NOT OK {e}"), 400
 
-@dis_bp.route('/schedule', methods=['POST'])
+@add_bp.route('/schedule', methods=['POST'])
 def add_schedule():
     data = request.get_json()
     start = data.get("start")
