@@ -140,20 +140,135 @@ def get_users():
     )
     return response
 
+
 @dis_bp.route('/jour', methods=['GET'])
 def get_journal_entries():
+
+    search_fields = {
+        'id': 'id = %s',
+        'start_time': 'start_time::TEXT LIKE %s',
+        'stop_time': 'stop_time::TEXT LIKE %s',
+        'pause': 'pause::TEXT LIKE %s',
+        'date': 'date = %s',
+        'status': 'LOWER(status) LIKE LOWER(%s)',
+        'note': 'LOWER(note) LIKE LOWER(%s)',
+        'user_inn': 'User_INN = %s',
+        'user_company_ogrn': 'User_Company_OGRN = %s',
+        'user_schedule_id': 'User_Schedule_id = %s'
+    }
+
+
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
 
-    base_query = "SELECT * FROM public.journal ORDER BY date DESC"
-    paginated_query = paginate_query(base_query, page, per_page)
 
-    cur.execute(paginated_query)
-    rows = cur.fetchall()
-    entries = [JournalEntry(row) for row in rows]
+    all_request_params = set(request.args.keys())
+    allowed_params = set(search_fields.keys()) | {'page', 'per_page'}
+    invalid_params = all_request_params - allowed_params
 
-    cur.execute("SELECT COUNT(*) FROM public.journal")
-    total = cur.fetchone()[0]
+    if invalid_params:
+        return jsonify({
+            "error": "Недопустимые параметры поиска",
+            "invalid_params": list(invalid_params),
+            "allowed_params": list(allowed_params)
+        }), 400
+
+
+    search_params = {}
+    for field in search_fields.keys():
+        value = request.args.get(field)
+        if value:
+            search_params[field] = value.split('_')
+
+
+    if search_params:
+        from itertools import product
+
+        param_combinations = []
+        for field, field_values in search_params.items():
+            param_combinations.append([(field, value) for value in field_values])
+
+        all_combinations = product(*param_combinations)
+        all_entries = []
+
+        for combination in all_combinations:
+            combo_conditions = []
+            combo_values = []
+
+            for field, value in combination:
+                condition = search_fields[field]
+                if 'LIKE' in condition:
+                    combo_values.append(f'%{value}%')
+                else:
+                    try:
+
+                        if field in ['id', 'user_inn', 'user_company_ogrn', 'user_schedule_id']:
+                            combo_values.append(int(value))
+                        # Дата
+                        elif field == 'date':
+                            combo_values.append(value)
+                        else:
+                            combo_values.append(value)
+                    except ValueError:
+                        combo_values.append(value)
+
+                combo_conditions.append(condition)
+
+            where_clause = " AND ".join(combo_conditions)
+            base_query = f"SELECT * FROM public.journal WHERE {where_clause} ORDER BY date DESC, id DESC"
+
+
+            paginated_query = paginate_query(base_query, page, per_page)
+            cur.execute(paginated_query, combo_values)
+
+            for row in cur.fetchall():
+                all_entries.append(JournalEntry(row))
+
+
+        seen = set()
+        entries = []
+        for item in all_entries:
+            item_key = tuple(sorted(item.items()))
+            if item_key not in seen:
+                seen.add(item_key)
+                entries.append(item)
+
+        total_where_conditions = []
+        total_values = []
+        for field, field_values in search_params.items():
+            condition = search_fields[field]
+            field_conditions = []
+            for value in field_values:
+                if 'LIKE' in condition:
+                    total_values.append(f'%{value}%')
+                else:
+                    try:
+                        if field in ['id', 'user_inn', 'user_company_ogrn', 'user_schedule_id']:
+                            total_values.append(int(value))
+                        elif field == 'date':
+                            total_values.append(value)
+                        else:
+                            total_values.append(value)
+                    except ValueError:
+                        total_values.append(value)
+                field_conditions.append(condition)
+
+            total_where_conditions.append(f"({' OR '.join(field_conditions)})")
+
+        total_where_clause = " AND ".join(total_where_conditions)
+        count_query = f"SELECT COUNT(*) FROM public.journal WHERE {total_where_clause}"
+        cur.execute(count_query, total_values)
+        total = cur.fetchone()[0]
+
+    else:
+        base_query = "SELECT * FROM public.journal ORDER BY date DESC, id DESC"
+        paginated_query = paginate_query(base_query, page, per_page)
+        cur.execute(paginated_query)
+        rows = cur.fetchall()
+        entries = [JournalEntry(row) for row in rows]
+
+        cur.execute("SELECT COUNT(*) FROM public.journal")
+        total = cur.fetchone()[0]
 
     return jsonify({
         "entries": entries,
