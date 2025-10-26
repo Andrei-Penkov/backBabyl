@@ -51,6 +51,9 @@ def ScheduleEntry(row):
 
 @dis_bp.route('/users', methods=['GET'])
 def get_users():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     search_fields = {
         'inn': 'INN = %s',
         'last_name': 'LOWER(last_name) LIKE LOWER(%s)',
@@ -64,12 +67,9 @@ def get_users():
 
     all_request_params = set(request.args.keys())
 
-
-    allowed_params = set(search_fields.keys())
-
+    allowed_params = set(search_fields.keys()) | {'page', 'per_page'}
 
     invalid_params = all_request_params - allowed_params
-
 
     if invalid_params:
         return jsonify({
@@ -78,17 +78,25 @@ def get_users():
             "allowed_params": list(allowed_params)
         }), 400
 
-
     search_params = {}
     for field in search_fields.keys():
         value = request.args.get(field)
         if value:
             search_params[field] = value.split('_')
 
+    total_count = 0
+
     if not search_params:
-        cur.execute("SELECT * FROM public.users ORDER BY last_name, first_name;")
+
+        base_query = "SELECT * FROM public.users ORDER BY last_name, first_name"
+        paginated_query = paginate_query(base_query, page, per_page)
+        cur.execute(paginated_query)
         rows = cur.fetchall()
         rez = [UserInfo(row) for row in rows]
+
+
+        cur.execute("SELECT COUNT(*) FROM public.users")
+        total_count = cur.fetchone()[0]
     else:
         from itertools import product
 
@@ -119,11 +127,19 @@ def get_users():
                 where_conditions.append(condition)
 
             where_clause = " AND ".join(where_conditions)
-            query = f"SELECT * FROM public.users WHERE {where_clause};"
-            cur.execute(query, values)
+
+
+            base_query = f"SELECT * FROM public.users WHERE {where_clause} ORDER BY last_name, first_name"
+            paginated_query = paginate_query(base_query, page, per_page)
+            cur.execute(paginated_query, values)
 
             for row in cur.fetchall():
                 rez.append(UserInfo(row))
+
+
+            count_query = f"SELECT COUNT(*) FROM public.users WHERE {where_clause}"
+            cur.execute(count_query, values)
+            total_count = cur.fetchone()[0]
 
     seen = set()
     unique_rez = []
@@ -134,8 +150,20 @@ def get_users():
             unique_rez.append(item)
     rez = unique_rez
 
+
+    response_data = {
+        'data': rez,
+        'pagination': {
+            'page': page,
+            'per_page': per_page,
+            'total': total_count,
+            'pages': (total_count + per_page - 1) // per_page
+        },
+        'count': len(rez)
+    }
+
     response = current_app.response_class(
-        json.dumps(rez, sort_keys=False, ensure_ascii=False),
+        json.dumps(response_data, sort_keys=False, ensure_ascii=False),
         mimetype='application/json'
     )
     return response
@@ -320,13 +348,26 @@ def get_schedules():
         }
     })
 
+
 @dis_bp.route('/companies', methods=['GET'])
 def search_companies():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     search_name = request.args.get('name')
     search_ogrn = request.args.get('ogrn')
 
     rez = []
 
+    allowed_params = {'name', 'ogrn', 'page', 'per_page'}
+    invalid_params = set(request.args.keys()) - allowed_params
+
+    if invalid_params:
+        return jsonify({
+            "error": "Недопустимые параметры поиска",
+            "invalid_params": list(invalid_params),
+            "allowed_params": list(allowed_params)
+        }), 400
 
     if search_name and search_ogrn:
         names = search_name.split('_')
@@ -334,11 +375,15 @@ def search_companies():
 
         for name in names:
             for ogrn in ogrns:
-                cur.execute("""
+
+                base_query = """
                     SELECT * FROM public.Company 
                     WHERE LOWER(name) LIKE LOWER(%s) 
-                    AND OGRN::TEXT LIKE %s;
-                """, (f'%{name}%', f'%{ogrn}%'))
+                    AND OGRN::TEXT LIKE %s
+                    ORDER BY name
+                """
+                paginated_query = paginate_query(base_query, page, per_page)
+                cur.execute(paginated_query, (f'%{name}%', f'%{ogrn}%'))
                 rows = cur.fetchall()
                 for row in rows:
                     rez.append({
@@ -346,23 +391,41 @@ def search_companies():
                         'name': row[1]
                     })
 
+
+                count_query = """
+                    SELECT COUNT(*) FROM public.Company 
+                    WHERE LOWER(name) LIKE LOWER(%s) 
+                    AND OGRN::TEXT LIKE %s
+                """
+                cur.execute(count_query, (f'%{name}%', f'%{ogrn}%'))
+
+
     elif search_name is not None:
         names = search_name.split('_')
         for name in names:
-            cur.execute("SELECT * FROM public.Company WHERE LOWER(name) LIKE LOWER(%s);",
-                        (f'%{name}%',))
+
+            base_query = "SELECT * FROM public.Company WHERE LOWER(name) LIKE LOWER(%s) ORDER BY name"
+            paginated_query = paginate_query(base_query, page, per_page)
+            cur.execute(paginated_query, (f'%{name}%',))
             rows = cur.fetchall()
             for row in rows:
                 rez.append({
                     'ogrn': row[0],
                     'name': row[1]
                 })
+
+
+            count_query = "SELECT COUNT(*) FROM public.Company WHERE LOWER(name) LIKE LOWER(%s)"
+            cur.execute(count_query, (f'%{name}%',))
+
 
     elif search_ogrn is not None:
         ogrns = search_ogrn.split('_')
         for ogrn in ogrns:
-            cur.execute("SELECT * FROM public.Company WHERE OGRN::TEXT LIKE %s;",
-                        (f'%{ogrn}%',))
+
+            base_query = "SELECT * FROM public.Company WHERE OGRN::TEXT LIKE %s ORDER BY name"
+            paginated_query = paginate_query(base_query, page, per_page)
+            cur.execute(paginated_query, (f'%{ogrn}%',))
             rows = cur.fetchall()
             for row in rows:
                 rez.append({
@@ -370,8 +433,16 @@ def search_companies():
                     'name': row[1]
                 })
 
+
+            count_query = "SELECT COUNT(*) FROM public.Company WHERE OGRN::TEXT LIKE %s"
+            cur.execute(count_query, (f'%{ogrn}%',))
+
+
     else:
-        cur.execute("SELECT * FROM public.Company ORDER BY name;")
+
+        base_query = "SELECT * FROM public.Company ORDER BY name"
+        paginated_query = paginate_query(base_query, page, per_page)
+        cur.execute(paginated_query)
         rows = cur.fetchall()
         for row in rows:
             rez.append({
@@ -379,5 +450,21 @@ def search_companies():
                 'name': row[1]
             })
 
+
+        cur.execute("SELECT COUNT(*) FROM public.Company")
+        total_count = cur.fetchone()[0]
+
+
     rez = [dict(t) for t in {frozenset(d.items()) for d in rez}]
-    return jsonify(rez)
+
+
+    return jsonify({
+        "data": rez,
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total_count,
+            "pages": (total_count + per_page - 1) // per_page
+        },
+        "count": len(rez)
+    })
