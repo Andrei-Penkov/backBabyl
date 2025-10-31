@@ -25,22 +25,28 @@ def add_company():
         conn.rollback()
         return jsonify(message=f"NOT OK {e}"), 400
 
-@dis_bp.route('/schedule', methods=['POST'])
+@add_bp.route('/schedule', methods=['POST'])
 def add_schedule():
-    data = request.get_json()
-    start = data.get("start")
-    stop = data.get("stop")
-    pause = data.get("pause")
-    free = data.get("free", False)
+    try:
+        data = request.get_json()
+        id = data.get("id")
+        start = data.get("start")
+        stop = data.get("stop")
+        pause = data.get("pause")
+        free = data.get("free", False)
 
-    if not all([start, stop, pause]):
-        return jsonify(error="Missing required fields"), 400
+        if not all([start, stop, pause]):
+            return jsonify(error="Missing required fields"), 400
 
-    cur.execute(
-        "INSERT INTO public.schedule (start, stop, pause, free) VALUES (%s, %s, %s, %s) RETURNING id;",
-        (start, stop, pause, free)
-    )
-    schedule_id = cur.fetchone()[0]
-    conn.commit()
+        cur.execute(
+            "INSERT INTO public.schedule (id, start, stop, pause, free) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
+            (id, start, stop, pause, free)
+        )
+        schedule_id = cur.fetchone()[0]
+        conn.commit()
 
-    return jsonify(message="Schedule added", id=schedule_id), 201
+        return jsonify(message="Schedule added", id=schedule_id), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400

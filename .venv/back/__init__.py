@@ -27,5 +27,4 @@ def create_app():
     app.register_blueprint(journal_bp, url_prefix='/journal')
     app.register_blueprint(del_bp, url_prefix='/del')
     app.register_blueprint(add_bp, url_prefix='/add')
-
     return app

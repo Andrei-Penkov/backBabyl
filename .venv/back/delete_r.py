@@ -40,7 +40,7 @@ def delete_journal_note(id):
     conn.commit()
     return jsonify({"msg": f"Journal note {id} deleted successfully"}), 200
 
-@dis_bp.route('/schedule/<int:schedule_id>', methods=['DELETE'])
+@del_bp.route('/schedule/<int:schedule_id>', methods=['DELETE'])
 def delete_schedule(schedule_id):
     cur.execute("DELETE FROM public.schedule WHERE id = %s;", (schedule_id,))
     conn.commit()

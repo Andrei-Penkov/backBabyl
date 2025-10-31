@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ae1f6adf-8afd-49a6-84bb-d165a70154e0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml~part1" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/add.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/add.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/delete_r.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/delete_r.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.venv/back/dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/dis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.venv/back/journal.py" beforeDir="false" afterPath="$PROJECT_DIR$/.venv/back/journal.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +38,7 @@
     &quot;Python.run.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Merging part1&quot;
+    &quot;git-widget-placeholder&quot;: &quot;part1&quot;
   }
 }</component>
   <component name="RunManager" selected="Python.run">
