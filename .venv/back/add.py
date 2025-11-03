@@ -3,10 +3,12 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 add_bp = Blueprint('add', __name__)
 
 @add_bp.route('/company', methods=['POST'])
+@role_required(['admin'])
 def add_company():
     try:
         if request.is_json:
@@ -26,6 +28,7 @@ def add_company():
         return jsonify(message=f"NOT OK {e}"), 400
 
 @add_bp.route('/schedule', methods=['POST'])
+@role_required(['admin', 'moderator'])
 def add_schedule():
     try:
         data = request.get_json()

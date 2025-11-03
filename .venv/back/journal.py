@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 journal_bp = Blueprint('journal_bp', __name__)
 def paginate_query(query, page, per_page):
@@ -14,6 +15,7 @@ def paginate_query(query, page, per_page):
 
 
 @journal_bp.route('/put', methods=['PUT'])
+@role_required(['admin', 'moderator','user'])
 def put_journal_entry():
     try:
         if request.is_json:
@@ -57,6 +59,7 @@ def format_time(t):
 
 
 @journal_bp.route('/get', methods=['GET'])
+@role_required(['admin', 'moderator','user'])
 def get_info_journal():
     try:
 

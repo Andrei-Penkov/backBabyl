@@ -5,12 +5,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 del_bp = Blueprint('del_bp', __name__)
 
 
 
 @del_bp.route('/user/<int:user_id>', methods=['DELETE'])
+@role_required(['admin', 'moderator'])
 def delete_user(user_id):
     try:
         cur.execute("SELECT * FROM public.users WHERE inn = %s", (user_id,))
@@ -25,6 +27,7 @@ def delete_user(user_id):
         return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/company/<int:ogrn>', methods=['DELETE'])
+@role_required(['admin'])
 def delete_company(ogrn):
     try:
         cur.execute("SELECT * FROM public.company WHERE ogrn = %s", (ogrn,))
@@ -39,6 +42,7 @@ def delete_company(ogrn):
         return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/journal/<int:id>', methods=['DELETE'])
+@role_required(['admin'])
 def delete_journal_note(id):
     try:
         cur.execute("SELECT * FROM public.journal WHERE id = %s", (id,))
@@ -53,6 +57,7 @@ def delete_journal_note(id):
         return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/schedule/<int:schedule_id>', methods=['DELETE'])
+@role_required(['admin', 'moderator'])
 def delete_schedule(schedule_id):
     try:
         cur.execute("DELETE FROM public.schedule WHERE id = %s;", (schedule_id,))

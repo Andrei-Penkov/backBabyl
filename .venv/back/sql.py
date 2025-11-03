@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify
 from .db import conn, cur
+from .auth import role_required
 
 sql_bp = Blueprint('sql_bp', __name__)
 
 @sql_bp.route('/sql')
+@role_required(['admin'])
 def sql():
     try:
         cur.execute(
@@ -62,6 +64,7 @@ def sql():
 
 
 @sql_bp.route('/sqldel')
+@role_required(['admin'])
 def sqldel():
     try:
         cur.execute('DROP TABLE Journal, Users, Schedule, Company CASCADE;')

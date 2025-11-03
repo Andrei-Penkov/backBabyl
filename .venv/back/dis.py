@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 dis_bp = Blueprint('dis_bp', __name__)
 
@@ -50,6 +51,7 @@ def ScheduleEntry(row):
 
 
 @dis_bp.route('/users', methods=['GET'])
+@role_required(['admin', 'moderator','user'])
 def get_users():
     try:
         page = request.args.get('page', 1, type=int)
@@ -174,6 +176,7 @@ def get_users():
 
 
 @dis_bp.route('/jour', methods=['GET'])
+@role_required(['admin', 'moderator','user'])
 def get_journal_entries():
     try:
         search_fields = {
@@ -316,6 +319,7 @@ def get_journal_entries():
         return jsonify(message=f"NOT OK {e}"), 400
 
 @dis_bp.route('/sch', methods=['GET'])
+@role_required(['admin', 'moderator','user'])
 def get_schedules():
     try:
         search_fields = {
@@ -420,6 +424,7 @@ def get_schedules():
 
 
 @dis_bp.route('/companies', methods=['GET'])
+@role_required(['admin', 'moderator','user'])
 def search_companies():
     try:
         page = request.args.get('page', 1, type=int)
