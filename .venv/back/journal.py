@@ -62,7 +62,7 @@ def get_info_journal():
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
-
+        total_count = 0
 
         search_fields = {
             'date': 'j.date = %s',

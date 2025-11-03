@@ -47,23 +47,27 @@ def reg():
 
 @auth_bp.route('/login', methods=['POST'])
 def logUser():
-    if request.is_json:
-        data = request.get_json()
-        name = data.get("inn")
-        password = data.get("password")
-        cur.execute("SELECT password FROM public.users WHERE inn = %s;", (name,))
-        rows = cur.fetchall()
-        hash = str(rows[0][0])
-        if check_password_hash(hash, password):
-            cur.execute(
-                f"SELECT * FROM public.users WHERE inn = '{name}'")
+    try:
+        if request.is_json:
+            data = request.get_json()
+            name = data.get("inn")
+            password = data.get("password")
+            cur.execute("SELECT password FROM public.users WHERE inn = %s;", (name,))
             rows = cur.fetchall()
-            inn = rows[0][0]
-            role = rows[0][5]
-            token = create_access_token(identity=name, additional_claims={"role": role})
-            return jsonify({"token": token, "role": role, "id": inn}
-                           ), 200
+            hash = str(rows[0][0])
+            if check_password_hash(hash, password):
+                cur.execute(
+                    f"SELECT * FROM public.users WHERE inn = '{name}'")
+                rows = cur.fetchall()
+                inn = rows[0][0]
+                role = rows[0][5]
+                token = create_access_token(identity=name, additional_claims={"role": role})
+                return jsonify({"token": token, "role": role, "id": inn}
+                               ), 200
+            else:
+                return jsonify(message="No correct password"), 200
         else:
-            return jsonify(message="No correct password"), 200
-    else:
-        return jsonify(error="NOT OK"), 400
+            return jsonify(error="NOT OK"), 400
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
