@@ -5,43 +5,64 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 del_bp = Blueprint('del_bp', __name__)
 
 
 
 @del_bp.route('/user/<int:user_id>', methods=['DELETE'])
+@role_required(['admin', 'moderator'])
 def delete_user(user_id):
-    cur.execute("SELECT * FROM public.users WHERE inn = %s", (user_id,))
-    rows = cur.fetchall()
-    if not len(rows):
-        return jsonify({"msg": f"User {user_id} not found"}), 404
-    cur.execute('DELETE FROM users WHERE INN = %s', (user_id,))
-    conn.commit()
-    return jsonify({"msg": f"User {user_id} deleted successfully"}), 200
+    try:
+        cur.execute("SELECT * FROM public.users WHERE inn = %s", (user_id,))
+        rows = cur.fetchall()
+        if not len(rows):
+            return jsonify({"msg": f"User {user_id} not found"}), 404
+        cur.execute('DELETE FROM users WHERE INN = %s', (user_id,))
+        conn.commit()
+        return jsonify({"msg": f"User {user_id} deleted successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/company/<int:ogrn>', methods=['DELETE'])
+@role_required(['admin'])
 def delete_company(ogrn):
-    cur.execute("SELECT * FROM public.company WHERE ogrn = %s", (ogrn,))
-    rows = cur.fetchall()
-    if not len(rows):
-        return jsonify({"msg": f"Company {ogrn} not found"}), 404
-    cur.execute('DELETE FROM company WHERE OGRN = %s', (ogrn,))
-    conn.commit()
-    return jsonify({"msg": f"Company {ogrn} deleted successfully"}), 200
+    try:
+        cur.execute("SELECT * FROM public.company WHERE ogrn = %s", (ogrn,))
+        rows = cur.fetchall()
+        if not len(rows):
+            return jsonify({"msg": f"Company {ogrn} not found"}), 404
+        cur.execute('DELETE FROM company WHERE OGRN = %s', (ogrn,))
+        conn.commit()
+        return jsonify({"msg": f"Company {ogrn} deleted successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/journal/<int:id>', methods=['DELETE'])
+@role_required(['admin'])
 def delete_journal_note(id):
-    cur.execute("SELECT * FROM public.journal WHERE id = %s", (id,))
-    rows = cur.fetchall()
-    if not len(rows):
-        return jsonify({"msg": f"Note with {id} not found"}), 404
-    cur.execute('DELETE FROM journal WHERE id = %s', (id,))
-    conn.commit()
-    return jsonify({"msg": f"Journal note {id} deleted successfully"}), 200
+    try:
+        cur.execute("SELECT * FROM public.journal WHERE id = %s", (id,))
+        rows = cur.fetchall()
+        if not len(rows):
+            return jsonify({"msg": f"Note with {id} not found"}), 404
+        cur.execute('DELETE FROM journal WHERE id = %s', (id,))
+        conn.commit()
+        return jsonify({"msg": f"Journal note {id} deleted successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400
 
 @del_bp.route('/schedule/<int:schedule_id>', methods=['DELETE'])
+@role_required(['admin', 'moderator'])
 def delete_schedule(schedule_id):
-    cur.execute("DELETE FROM public.schedule WHERE id = %s;", (schedule_id,))
-    conn.commit()
-    return jsonify(message="Schedule deleted"), 200
+    try:
+        cur.execute("DELETE FROM public.schedule WHERE id = %s;", (schedule_id,))
+        conn.commit()
+        return jsonify(message="Schedule deleted"), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify(message=f"NOT OK {e}"), 400

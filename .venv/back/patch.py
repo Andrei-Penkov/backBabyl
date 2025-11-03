@@ -3,11 +3,12 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from .db import conn, cur
+from .auth import role_required
 
 patch_bp = Blueprint('patch_bp', __name__)
 
 @patch_bp.route('/user', methods=['PATCH'])
-# @role_required(['admin', 'moderator'])
+@role_required(['admin', 'moderator'])
 def patch_user():
     try:
         if not request.is_json:
@@ -45,7 +46,7 @@ def patch_user():
         return jsonify(message=f"NOT OK {e}"), 400
 
 @patch_bp.route('/sch', methods=['PATCH'])
-# @role_required(['admin', 'moderator'])
+@role_required(['admin', 'moderator'])
 def patch_schedule():
     try:
         if not request.is_json:
@@ -83,7 +84,7 @@ def patch_schedule():
 
 
 @patch_bp.route('/jour/note', methods=['PATCH'])
-# @role_required(['admin', 'moderator'])
+@role_required(['admin', 'moderator'])
 def patch_journal_note():
     try:
         if not request.is_json:
@@ -115,6 +116,7 @@ def patch_journal_note():
         return jsonify(message=f"NOT OK {e}"), 400
 
 @patch_bp.route('/company', methods=['PATCH'])
+@role_required(['admin', 'moderator'])
 def edit_company():
     try:
         if not request.is_json:

@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify
 from .db import conn, cur
+from .auth import role_required
 
 sql_bp = Blueprint('sql_bp', __name__)
 
 @sql_bp.route('/sql')
+@role_required(['admin'])
 def sql():
     try:
         cur.execute(
@@ -13,6 +15,7 @@ def sql():
                 name text NOT NULL,
                 CONSTRAINT Company_PK PRIMARY KEY (OGRN)
             );
+            
             CREATE TABLE Schedule (
                 id integer NOT NULL,
                 start time NOT NULL,
@@ -21,6 +24,7 @@ def sql():
                 free boolean NOT NULL,
                 CONSTRAINT Schedule_PK PRIMARY KEY (id)
             );
+            
             CREATE TABLE Users (
                 INN integer NOT NULL,
                 last_name text NOT NULL,
@@ -31,10 +35,11 @@ def sql():
                 Company_OGRN integer NOT NULL,
                 Schedule_id integer NOT NULL,
                 password text NOT NULL,
-                CONSTRAINT User_PK PRIMARY KEY (INN, Company_OGRN, Schedule_id),
+                CONSTRAINT User_PK PRIMARY KEY (INN),
                 CONSTRAINT User_Company_FK FOREIGN KEY (Company_OGRN) REFERENCES Company(OGRN) ON DELETE CASCADE ON UPDATE CASCADE,
                 CONSTRAINT User_Schedule_FK FOREIGN KEY (Schedule_id) REFERENCES Schedule(id) ON DELETE CASCADE ON UPDATE CASCADE
             );
+            
             CREATE TABLE Journal (
                 id integer NOT NULL,
                 start_time time NOT NULL,
@@ -46,8 +51,8 @@ def sql():
                 User_INN integer NOT NULL,
                 User_Company_OGRN integer NOT NULL,
                 User_Schedule_id integer NOT NULL,
-                CONSTRAINT Journal_PK PRIMARY KEY (id, User_INN, User_Company_OGRN, User_Schedule_id),
-                CONSTRAINT Journal_User_FK FOREIGN KEY (User_INN, User_Company_OGRN, User_Schedule_id) REFERENCES Users (INN, Company_OGRN, Schedule_id) ON DELETE CASCADE ON UPDATE CASCADE
+                CONSTRAINT Journal_PK PRIMARY KEY (id),
+                CONSTRAINT Journal_User_FK FOREIGN KEY (User_INN) REFERENCES Users(INN) ON DELETE CASCADE ON UPDATE CASCADE
             );
             '''
         )
@@ -59,6 +64,7 @@ def sql():
 
 
 @sql_bp.route('/sqldel')
+@role_required(['admin'])
 def sqldel():
     try:
         cur.execute('DROP TABLE Journal, Users, Schedule, Company CASCADE;')
