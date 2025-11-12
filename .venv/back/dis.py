@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 dis_bp = Blueprint('dis_bp', __name__)
@@ -54,6 +54,7 @@ def ScheduleEntry(row):
 @role_required(['admin', 'moderator','user'])
 def get_users():
     try:
+        cur = get_cursor()
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
 
@@ -179,6 +180,7 @@ def get_users():
 @role_required(['admin', 'moderator','user'])
 def get_journal_entries():
     try:
+        cur = get_cursor()
         search_fields = {
             'id': 'id = %s',
             'start_time': 'start_time::TEXT LIKE %s',
@@ -322,6 +324,7 @@ def get_journal_entries():
 @role_required(['admin', 'moderator','user'])
 def get_schedules():
     try:
+        cur = get_cursor()
         search_fields = {
             'free': 'free = %s'
         }
@@ -427,6 +430,7 @@ def get_schedules():
 @role_required(['admin', 'moderator','user'])
 def search_companies():
     try:
+        cur = get_cursor()
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
 

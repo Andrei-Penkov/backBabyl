@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 patch_bp = Blueprint('patch_bp', __name__)
@@ -11,6 +11,7 @@ patch_bp = Blueprint('patch_bp', __name__)
 @role_required(['admin', 'moderator'])
 def patch_user():
     try:
+        cur = get_cursor()
         if not request.is_json:
             return jsonify(error="NOT JSON"), 400
 
@@ -49,6 +50,7 @@ def patch_user():
 @role_required(['admin', 'moderator'])
 def patch_schedule():
     try:
+        cur = get_cursor()
         if not request.is_json:
             return jsonify(error="NOT JSON"), 400
 
@@ -87,6 +89,7 @@ def patch_schedule():
 @role_required(['admin', 'moderator'])
 def patch_journal_note():
     try:
+        cur = get_cursor()
         if not request.is_json:
             return jsonify(error="NOT JSON"), 400
 
@@ -119,6 +122,7 @@ def patch_journal_note():
 @role_required(['admin', 'moderator'])
 def edit_company():
     try:
+        cur = get_cursor()
         if not request.is_json:
             return jsonify(error="NOT JSON"), 400
 

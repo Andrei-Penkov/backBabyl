@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 del_bp = Blueprint('del_bp', __name__)
@@ -15,6 +15,7 @@ del_bp = Blueprint('del_bp', __name__)
 @role_required(['admin', 'moderator'])
 def delete_user(user_id):
     try:
+        cur = get_cursor()
         cur.execute("SELECT * FROM public.users WHERE inn = %s", (user_id,))
         rows = cur.fetchall()
         if not len(rows):
@@ -30,6 +31,7 @@ def delete_user(user_id):
 @role_required(['admin'])
 def delete_company(ogrn):
     try:
+        cur = get_cursor()
         cur.execute("SELECT * FROM public.company WHERE ogrn = %s", (ogrn,))
         rows = cur.fetchall()
         if not len(rows):
@@ -45,6 +47,7 @@ def delete_company(ogrn):
 @role_required(['admin'])
 def delete_journal_note(id):
     try:
+        cur = get_cursor()
         cur.execute("SELECT * FROM public.journal WHERE id = %s", (id,))
         rows = cur.fetchall()
         if not len(rows):
@@ -60,6 +63,7 @@ def delete_journal_note(id):
 @role_required(['admin', 'moderator'])
 def delete_schedule(schedule_id):
     try:
+        cur = get_cursor()
         cur.execute("DELETE FROM public.schedule WHERE id = %s;", (schedule_id,))
         conn.commit()
         return jsonify(message="Schedule deleted"), 200

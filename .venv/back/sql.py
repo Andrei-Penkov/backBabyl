@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 sql_bp = Blueprint('sql_bp', __name__)
@@ -8,6 +8,7 @@ sql_bp = Blueprint('sql_bp', __name__)
 @role_required(['admin'])
 def sql():
     try:
+        cur = get_cursor()
         cur.execute(
             '''
             CREATE TABLE Company (
@@ -67,6 +68,7 @@ def sql():
 @role_required(['admin'])
 def sqldel():
     try:
+        cur = get_cursor()
         cur.execute('DROP TABLE Journal, Users, Schedule, Company CASCADE;')
         conn.commit()
         return jsonify(message="OK"), 200

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -22,6 +22,7 @@ def role_required(allowed_roles):
 @auth_bp.route('/reg', methods=['POST'])
 def reg():
     try:
+        cur = get_cursor()
         if request.is_json:
             data = request.get_json()
             inn = data.get("inn")
@@ -48,6 +49,7 @@ def reg():
 @auth_bp.route('/login', methods=['POST'])
 def logUser():
     try:
+        cur = get_cursor()
         if request.is_json:
             data = request.get_json()
             name = data.get("inn")
