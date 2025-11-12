@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import OrderedDict
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 journal_bp = Blueprint('journal_bp', __name__)
@@ -18,6 +18,7 @@ def paginate_query(query, page, per_page):
 @role_required(['admin', 'moderator','user'])
 def put_journal_entry():
     try:
+        cur = get_cursor()
         if request.is_json:
             data = request.get_json()
             id = data.get("id")
@@ -62,7 +63,7 @@ def format_time(t):
 @role_required(['admin', 'moderator','user'])
 def get_info_journal():
     try:
-
+        cur = get_cursor()
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         total_count = 0

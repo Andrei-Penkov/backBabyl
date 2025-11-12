@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from .db import conn, cur
+from .db import conn, cur, get_cursor
 from .auth import role_required
 
 add_bp = Blueprint('add', __name__)
@@ -11,6 +11,7 @@ add_bp = Blueprint('add', __name__)
 @role_required(['admin'])
 def add_company():
     try:
+        cur = get_cursor()
         if request.is_json:
             data = request.get_json()
             company_ogrn = data.get("company_ogrn")
@@ -31,6 +32,7 @@ def add_company():
 @role_required(['admin', 'moderator'])
 def add_schedule():
     try:
+        cur = get_cursor()
         data = request.get_json()
         id = data.get("id")
         start = data.get("start")
