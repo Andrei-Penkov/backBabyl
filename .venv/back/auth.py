@@ -63,7 +63,7 @@ def logUser():
                 rows = cur.fetchall()
                 inn = rows[0][0]
                 role = rows[0][5]
-                token = create_access_token(identity=name, additional_claims={"role": role})
+                token = create_access_token(identity=str(name), additional_claims={"role": role})
                 return jsonify({"token": token, "role": role, "id": inn}
                                ), 200
             else:
