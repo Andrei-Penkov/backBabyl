@@ -1,0 +1,2611 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "API приложения для контроля рабочего времени",
+    "description" : "# Инструкция по запуску проекта\n\n## Запуск сервера\n- Сервер запускается через файл `run.py`\n- Порт по умолчанию: **20000**\n- После запуска API будет доступно по адресу: `http://127.0.0.1:20000`\n\n## Подключение к базе данных\n- Подключение к PostgreSQL 17 осуществляется через файл `db.py`\n- Файл содержит настройки подключения и управление соединением с БД\n\n## Зависимости проекта\n**Версия Python:** 3.10\n\n**Установленные библиотеки:**\n- blinker==1.9.0\n- click==8.3.0\n- colorama==0.4.6\n- flask==3.1.2\n- flask-jwt-extended==4.7.1\n- flask-sqlalchemy==3.1.1\n- greenlet==3.2.4\n- itsdangerous==2.2.0\n- jinja2==3.1.6\n- markupsafe==3.0.3\n- pip==25.0.1\n- psycopg2==2.9.11\n- pyjwt==2.10.1\n- sqlalchemy==2.0.43\n- typing-extensions==4.15.0\n- werkzeug==3.1.3\n\n## Доступные возможности API:\n- Управление компаниями (добавление, обновление, удаление, поиск)\n- Работа с пользователями (регистрация, аутентификация, управление)\n- Управление расписаниями рабочих смен\n- Ведение журнала рабочего времени\n- Ролевая модель доступа (admin, moderator, user)\n\n## Аутентификация\n- Используется JWT токены\n- Токен передается в заголовке `Authorization: Bearer <token>`\n",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "http://127.0.0.1:20000",
+    "description" : "Локальный сервер разработки"
+  } ],
+  "tags" : [ {
+    "name" : "Компания",
+    "description" : "Маршруты с компаниями"
+  }, {
+    "name" : "Пользователь",
+    "description" : "Маршруты с пользователями"
+  }, {
+    "name" : "Расписание",
+    "description" : "Маршруты с расписаниями"
+  }, {
+    "name" : "Журнал",
+    "description" : "Маршруты с журналом"
+  }, {
+    "name" : "Аутентификация",
+    "description" : "Регистрация и вход пользователей"
+  }, {
+    "name" : "Системные",
+    "description" : "Базы данных"
+  } ],
+  "paths" : {
+    "/add/company" : {
+      "post" : {
+        "tags" : [ "Компания" ],
+        "summary" : "Добавить компанию",
+        "description" : "Требуемая роль: admin.\nДобавление новой компании в систему. Доступно только администраторам.\n",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/add_company_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Компания успешно добавлена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка или некорректный JSON",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён, нет прав",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/patch/company" : {
+      "patch" : {
+        "tags" : [ "Компания" ],
+        "summary" : "Обновление данных компании",
+        "description" : "Требуемая роль: admin,moderator(начальник).\nОбновление параметров компании.\n",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/patch_company_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Компания успешно обновлена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_1"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка или некорректный JSON",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_1"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён, нет прав",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Компания не найдена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/del/company/{ogrn}" : {
+      "delete" : {
+        "tags" : [ "Компания" ],
+        "summary" : "Удалить компанию по ОГРН",
+        "description" : "Требуемая роль: admin.\nУдаление компании по ОГРН. Доступно только администраторам.\n",
+        "parameters" : [ {
+          "name" : "ogrn",
+          "in" : "path",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Компания удалена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_2"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён, нет прав",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Компания не найдена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_404_1"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/dis/companies" : {
+      "get" : {
+        "tags" : [ "Компания" ],
+        "summary" : "Поиск компаний по имени и ОГРН с пагинацией",
+        "description" : "Доступен всем ролям\n",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Номер страницы",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "per_page",
+          "in" : "query",
+          "description" : "Количество элементов на страницу",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 10
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "description" : "Поиск по имени компании",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "ООО Ромашка"
+        }, {
+          "name" : "ogrn",
+          "in" : "query",
+          "description" : "Поиск по ОГРН",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "1234567890123"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Результат поиска с пагинацией",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_3"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Недопустимые параметры поиска",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_2"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/del/user/{user_id}" : {
+      "delete" : {
+        "tags" : [ "Пользователь" ],
+        "summary" : "Удалить пользователя по ID",
+        "description" : "Требуемая роль: admin,moderator(начальник).\nУдаление пользователя по id.\n",
+        "parameters" : [ {
+          "name" : "user_id",
+          "in" : "path",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Пользователь удалён",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_4"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён, нет прав",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Пользователь не найден",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_404_2"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/dis/users" : {
+      "get" : {
+        "tags" : [ "Пользователь" ],
+        "summary" : "Получить список пользователей с фильтрами и пагинацией",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Номер страницы, по умолчанию 1",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "per_page",
+          "in" : "query",
+          "description" : "Количество элементов на страницу, по умолчанию 10",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 10
+        }, {
+          "name" : "inn",
+          "in" : "query",
+          "description" : "Фильтр по ИНН",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "771234567890"
+        }, {
+          "name" : "last_name",
+          "in" : "query",
+          "description" : "Фильтр по фамилии (поддерживает несколько значений через _)",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иванов"
+        }, {
+          "name" : "first_name",
+          "in" : "query",
+          "description" : "Фильтр по имени",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иван"
+        }, {
+          "name" : "middle_name",
+          "in" : "query",
+          "description" : "Фильтр по отчеству",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иванович"
+        }, {
+          "name" : "department_id",
+          "in" : "query",
+          "description" : "Фильтр по ID отдела",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "role",
+          "in" : "query",
+          "description" : "Фильтр по роли",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "admin", "user", "moderator" ]
+          },
+          "example" : "user"
+        }, {
+          "name" : "company_ogrn",
+          "in" : "query",
+          "description" : "Фильтр по ОГРН компании",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "1234567890123"
+        }, {
+          "name" : "schedule_id",
+          "in" : "query",
+          "description" : "Фильтр по ID расписания",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Список пользователей с пагинацией",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_5"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Недопустимые параметры запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_3"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/patch/user" : {
+      "patch" : {
+        "tags" : [ "Пользователь" ],
+        "summary" : "Частичное обновление данных пользователя",
+        "description" : "Требуемая роль: admin,moderator(начальник).\n",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/patch_user_body"
+              },
+              "examples" : {
+                "update_name" : {
+                  "summary" : "Обновление ФИО",
+                  "value" : {
+                    "inn" : 771234567890,
+                    "last_name" : "Иванов",
+                    "first_name" : "Иван",
+                    "middle_name" : "Иванович"
+                  }
+                },
+                "change_role" : {
+                  "summary" : "Смена роли и отдела",
+                  "value" : {
+                    "inn" : 772345678901,
+                    "role" : "admin",
+                    "department_id" : 1
+                  }
+                },
+                "minimal_update" : {
+                  "summary" : "Минимальное обновление",
+                  "value" : {
+                    "inn" : 773456789012,
+                    "schedule_id" : 2
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Пользователь успешно обновлен",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_6"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Пропущен ИНН, либо нет полей для обновления, либо ошибка",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_4"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён, нет прав",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/auth/reg" : {
+      "post" : {
+        "tags" : [ "Аутентификация" ],
+        "summary" : "Регистрация пользователя",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/auth_reg_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Пользователь успешно зарегистрирован",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка в данных запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_5"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login" : {
+      "post" : {
+        "tags" : [ "Аутентификация" ],
+        "summary" : "Вход пользователя",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/auth_login_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Успешный вход, возвращает JWT токен",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_7"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка в запросе",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_5"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/del/journal/{id}" : {
+      "delete" : {
+        "tags" : [ "Журнал" ],
+        "summary" : "Удалить запись журнала по ID",
+        "description" : "**Требуемая роль:** admin - только администраторы могут удалять записи журнала",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID записи журнала",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Запись журнала успешно удалена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_8"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка при удалении записи",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_6"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Запись журнала не найдена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_404_3"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/patch/jour/note" : {
+      "patch" : {
+        "tags" : [ "Журнал" ],
+        "summary" : "Обновление заметки в журнале",
+        "description" : "**Требуемые роли:** admin, moderator",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/jour_note_body"
+              },
+              "examples" : {
+                "update_note" : {
+                  "summary" : "Обновление заметки",
+                  "value" : {
+                    "id" : 1,
+                    "note" : "Обновленный текст заметки"
+                  }
+                },
+                "minimal_note" : {
+                  "summary" : "Короткая заметка",
+                  "value" : {
+                    "id" : 2,
+                    "note" : "Исправлено"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Заметка успешно обновлена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_9"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_7"
+                },
+                "examples" : {
+                  "not_json" : {
+                    "summary" : "Не JSON формат",
+                    "value" : {
+                      "error" : "NOT JSON"
+                    }
+                  },
+                  "missing_identifiers" : {
+                    "summary" : "Отсутствуют обязательные поля",
+                    "value" : {
+                      "error" : "Missing required identifiers"
+                    }
+                  },
+                  "nothing_to_update" : {
+                    "summary" : "Нет данных для обновления",
+                    "value" : {
+                      "error" : "Nothing to update"
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Доступ запрещён",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_403_1"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/journal/put" : {
+      "put" : {
+        "tags" : [ "Журнал" ],
+        "summary" : "Добавить запись в журнал",
+        "description" : "**Требуемые роли:** admin, moderator, user",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/journal_put_body"
+              },
+              "examples" : {
+                "work_day" : {
+                  "summary" : "Стандартный рабочий день",
+                  "value" : {
+                    "id" : 1,
+                    "start" : "09:00",
+                    "stop" : "18:00",
+                    "pause" : "01:00",
+                    "date" : "2024-01-15",
+                    "status" : "worked",
+                    "note" : "Работа над проектом",
+                    "user_inn" : 771234567890,
+                    "user_company_ogrn" : 1234567890123,
+                    "user_schedule_id" : 1
+                  }
+                },
+                "short_day" : {
+                  "summary" : "Сокращенный день",
+                  "value" : {
+                    "id" : 2,
+                    "start" : "10:00",
+                    "stop" : "15:00",
+                    "pause" : "00:30",
+                    "date" : "2024-01-16",
+                    "status" : "short_day",
+                    "note" : "Сокращенный рабочий день",
+                    "user_inn" : 772345678901,
+                    "user_company_ogrn" : 1234567890123,
+                    "user_schedule_id" : 1
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Запись успешно добавлена",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_7"
+                },
+                "examples" : {
+                  "not_json" : {
+                    "summary" : "Не JSON формат",
+                    "value" : {
+                      "error" : "NOT JSON"
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  },
+                  "missing_required" : {
+                    "summary" : "Отсутствуют обязательные поля",
+                    "value" : {
+                      "error" : "Missing required fields"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/journal/get" : {
+      "get" : {
+        "tags" : [ "Журнал" ],
+        "summary" : "Получить записи журнала с фильтрацией и пагинацией",
+        "description" : "**Требуемые роли:** admin, moderator, user",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Номер страницы для пагинации",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "per_page",
+          "in" : "query",
+          "description" : "Количество записей на странице",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 10
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "description" : "Дата записи",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-01-15"
+        }, {
+          "name" : "inn",
+          "in" : "query",
+          "description" : "ИНН пользователя",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 771234567890
+        }, {
+          "name" : "department_id",
+          "in" : "query",
+          "description" : "ID отдела пользователя",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "company_ogrn",
+          "in" : "query",
+          "description" : "ОГРН компании пользователя",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1234567890123
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "Статус записи (поиск нечувствителен к регистру)",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "worked"
+        }, {
+          "name" : "last_name",
+          "in" : "query",
+          "description" : "Фамилия пользователя (поиск нечувствителен к регистру)",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иванов"
+        }, {
+          "name" : "first_name",
+          "in" : "query",
+          "description" : "Имя пользователя (поиск нечувствителен к регистру)",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иван"
+        }, {
+          "name" : "middle_name",
+          "in" : "query",
+          "description" : "Отчество пользователя (поиск нечувствителен к регистру)",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Иванович"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Успешный ответ с записями журнала и информацией о пагинации",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_10"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Недопустимые параметры поиска",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_8"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Внутренняя ошибка сервера",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_500"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/dis/jour" : {
+      "get" : {
+        "tags" : [ "Журнал" ],
+        "summary" : "Получить записи журнала с расписанием сотрудника",
+        "description" : "**Требуемые роли:** admin, moderator, user",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Номер страницы",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "per_page",
+          "in" : "query",
+          "description" : "Количество элементов на страницу",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 10
+        }, {
+          "name" : "id",
+          "in" : "query",
+          "description" : "Фильтр по ID записи",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "start_time",
+          "in" : "query",
+          "description" : "Фильтр по времени начала",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "09:00"
+        }, {
+          "name" : "stop_time",
+          "in" : "query",
+          "description" : "Фильтр по времени окончания",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "18:00"
+        }, {
+          "name" : "pause",
+          "in" : "query",
+          "description" : "Фильтр по времени паузы",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "01:00"
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "description" : "Фильтр по дате",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-01-15"
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "Фильтр по статусу",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "worked"
+        }, {
+          "name" : "note",
+          "in" : "query",
+          "description" : "Фильтр по заметке",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "Работа над проектом"
+        }, {
+          "name" : "user_inn",
+          "in" : "query",
+          "description" : "Фильтр по ИНН пользователя",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 771234567890
+        }, {
+          "name" : "user_company_ogrn",
+          "in" : "query",
+          "description" : "Фильтр по ОГРН компании",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1234567890123
+        }, {
+          "name" : "user_schedule_id",
+          "in" : "query",
+          "description" : "Фильтр по ID расписания",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Записи журнала с пагинацией",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_11"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_9"
+                },
+                "examples" : {
+                  "invalid_params" : {
+                    "summary" : "Недопустимые параметры",
+                    "value" : {
+                      "error" : "Недопустимые параметры поиска",
+                      "invalid_params" : [ "unknown_field", "invalid_sort" ],
+                      "allowed_params" : [ "page", "per_page", "id", "start_time", "stop_time", "pause", "date", "status", "note", "user_inn", "user_company_ogrn", "user_schedule_id" ]
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/add/schedule" : {
+      "post" : {
+        "tags" : [ "Расписание" ],
+        "summary" : "Добавить расписание",
+        "description" : "**Требуемые роли:** admin, moderator",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/add_schedule_body"
+              },
+              "examples" : {
+                "standard_schedule" : {
+                  "summary" : "Стандартное расписание",
+                  "value" : {
+                    "id" : 1,
+                    "start" : "09:00:00",
+                    "stop" : "18:00:00",
+                    "pause" : "01:00:00",
+                    "free" : false
+                  }
+                },
+                "short_schedule" : {
+                  "summary" : "Сокращенное расписание",
+                  "value" : {
+                    "start" : "10:00:00",
+                    "stop" : "15:00:00",
+                    "pause" : "00:30:00",
+                    "free" : true
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Расписание добавлено",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_201"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_7"
+                },
+                "examples" : {
+                  "missing_fields" : {
+                    "summary" : "Отсутствуют обязательные поля",
+                    "value" : {
+                      "error" : "Missing required fields"
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/patch/sch" : {
+      "patch" : {
+        "tags" : [ "Расписание" ],
+        "summary" : "Частичное обновление расписания",
+        "description" : "**Требуемые роли:** admin, moderator",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/patch_sch_body"
+              },
+              "examples" : {
+                "update_time" : {
+                  "summary" : "Обновление времени",
+                  "value" : {
+                    "id" : 1,
+                    "start" : "10:00:00",
+                    "stop" : "17:00:00"
+                  }
+                },
+                "update_pause" : {
+                  "summary" : "Обновление перерыва",
+                  "value" : {
+                    "id" : 2,
+                    "pause" : "00:45:00"
+                  }
+                },
+                "update_status" : {
+                  "summary" : "Обновление статуса",
+                  "value" : {
+                    "id" : 3,
+                    "free" : true
+                  }
+                },
+                "full_update" : {
+                  "summary" : "Полное обновление",
+                  "value" : {
+                    "id" : 4,
+                    "start" : "08:00:00",
+                    "stop" : "16:00:00",
+                    "pause" : "01:00:00",
+                    "free" : false
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Расписание успешно обновлено",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_12"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_7"
+                },
+                "examples" : {
+                  "not_json" : {
+                    "summary" : "Не JSON формат",
+                    "value" : {
+                      "error" : "NOT JSON"
+                    }
+                  },
+                  "missing_id" : {
+                    "summary" : "Отсутствует ID расписания",
+                    "value" : {
+                      "error" : "Missing schedule id"
+                    }
+                  },
+                  "no_fields" : {
+                    "summary" : "Нет полей для обновления",
+                    "value" : {
+                      "message" : "No fields to update"
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/dis/sch" : {
+      "get" : {
+        "tags" : [ "Расписание" ],
+        "summary" : "Получить расписания с фильтрами и пагинацией",
+        "description" : "**Требуемые роли:** admin, moderator, user",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Номер страницы",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        }, {
+          "name" : "per_page",
+          "in" : "query",
+          "description" : "Количество элементов на страницу",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 10
+        }, {
+          "name" : "free",
+          "in" : "query",
+          "description" : "Фильтр по свободному статусу",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : false
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Расписания с пагинацией",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_13"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка запроса",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_9"
+                },
+                "examples" : {
+                  "invalid_params" : {
+                    "summary" : "Недопустимые параметры",
+                    "value" : {
+                      "error" : "Недопустимые параметры поиска",
+                      "invalid_params" : [ "unknown_field", "invalid_sort" ],
+                      "allowed_params" : [ "page", "per_page", "free" ]
+                    }
+                  },
+                  "database_error" : {
+                    "summary" : "Ошибка базы данных",
+                    "value" : {
+                      "message" : "NOT OK: ошибка базы данных"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/del/schedule/{schedule_id}" : {
+      "delete" : {
+        "tags" : [ "Расписание" ],
+        "summary" : "Удалить расписание по ID",
+        "description" : "**Требуемые роли:** admin, moderator",
+        "parameters" : [ {
+          "name" : "schedule_id",
+          "in" : "path",
+          "description" : "ID расписания для удаления",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Расписание успешно удалено",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200_14"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка при удалении расписания",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_6"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/sql/sql" : {
+      "get" : {
+        "tags" : [ "Системные" ],
+        "summary" : "Создать таблицы базы данных",
+        "description" : "**Требуемая роль:** admin - создает все необходимые таблицы (Company, Schedule, Users, Journal)",
+        "responses" : {
+          "200" : {
+            "description" : "Таблицы успешно созданы",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка при создании таблиц",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_6"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/sql/sqldel" : {
+      "get" : {
+        "tags" : [ "Системные" ],
+        "summary" : "Удалить все таблицы базы данных",
+        "description" : "**Требуемая роль:** admin - удаляет все таблицы (Journal, Users, Schedule, Company) каскадно",
+        "responses" : {
+          "200" : {
+            "description" : "Таблицы успешно удалены",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Ошибка при удалении таблиц",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inline_response_400_6"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "inline_response_403_1" : {
+        "type" : "object",
+        "properties" : {
+          "error" : {
+            "type" : "string",
+            "example" : "Доступ запрещён: недостаточно прав"
+          }
+        }
+      },
+      "inline_response_200_11_entries" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "start_time" : {
+            "type" : "string",
+            "example" : "09:00:00"
+          },
+          "stop_time" : {
+            "type" : "string",
+            "example" : "18:00:00"
+          },
+          "pause" : {
+            "type" : "string",
+            "example" : "01:00:00"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "example" : "2024-01-15"
+          },
+          "status" : {
+            "type" : "string",
+            "example" : "worked"
+          },
+          "note" : {
+            "type" : "string",
+            "example" : "Работа над проектом"
+          },
+          "user_inn" : {
+            "type" : "integer",
+            "example" : 771234567890
+          },
+          "user_company_ogrn" : {
+            "type" : "integer",
+            "example" : 1234567890123
+          },
+          "user_schedule_id" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_200_5_data" : {
+        "type" : "object",
+        "properties" : {
+          "inn" : {
+            "type" : "integer",
+            "example" : 771234567890
+          },
+          "last_name" : {
+            "type" : "string",
+            "example" : "Иванов"
+          },
+          "first_name" : {
+            "type" : "string",
+            "example" : "Иван"
+          },
+          "middle_name" : {
+            "type" : "string",
+            "example" : "Иванович"
+          },
+          "department_id" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "role" : {
+            "type" : "string",
+            "example" : "user"
+          },
+          "company_ogrn" : {
+            "type" : "integer",
+            "example" : 1234567890123
+          },
+          "schedule_id" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "auth_login_body" : {
+        "required" : [ "inn", "password" ],
+        "type" : "object",
+        "properties" : {
+          "inn" : {
+            "type" : "integer",
+            "example" : 771234567890
+          },
+          "password" : {
+            "type" : "string",
+            "format" : "password",
+            "example" : "password"
+          }
+        }
+      },
+      "inline_response_500" : {
+        "type" : "object",
+        "properties" : {
+          "error" : {
+            "type" : "string",
+            "example" : "Ошибка при выполнении запроса"
+          }
+        }
+      },
+      "inline_response_200_9" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "Journal note updated"
+          }
+        }
+      },
+      "inline_response_200_5" : {
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/inline_response_200_5_data"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/inline_response_200_11_pagination"
+          },
+          "count" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_200_6" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "User updated"
+          }
+        }
+      },
+      "inline_response_200_7" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "token" : {
+              "type" : "string",
+              "description" : "JWT токен для авторизации",
+              "example" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NzEyMzQ1Njc4OTAiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.abc123def456ghi789"
+            },
+            "role" : {
+              "type" : "string",
+              "description" : "Роль пользователя",
+              "example" : "admin",
+              "enum" : [ "admin", "user", "moderator" ]
+            },
+            "id" : {
+              "type" : "integer",
+              "description" : "ИНН пользователя",
+              "example" : 771234567890
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "No correct password"
+            }
+          }
+        } ]
+      },
+      "patch_user_body" : {
+        "required" : [ "inn" ],
+        "type" : "object",
+        "properties" : {
+          "inn" : {
+            "type" : "integer",
+            "description" : "ИНН пользователя для идентификации",
+            "example" : 771234567890
+          },
+          "last_name" : {
+            "type" : "string",
+            "description" : "Фамилия пользователя",
+            "example" : "Иванов"
+          },
+          "middle_name" : {
+            "type" : "string",
+            "description" : "Отчество пользователя",
+            "example" : "Иванович"
+          },
+          "first_name" : {
+            "type" : "string",
+            "description" : "Имя пользователя",
+            "example" : "Иван"
+          },
+          "department_id" : {
+            "type" : "integer",
+            "description" : "ID отдела",
+            "example" : 1
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "Роль пользователя",
+            "example" : "user",
+            "enum" : [ "admin", "user", "moderator" ]
+          },
+          "company_ogrn" : {
+            "type" : "integer",
+            "description" : "ОГРН компании",
+            "example" : 1234567890123
+          },
+          "schedule_id" : {
+            "type" : "integer",
+            "description" : "ID расписания",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_200_8" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "Journal note 1 deleted successfully"
+          }
+        }
+      },
+      "patch_company_body" : {
+        "required" : [ "ogrn" ],
+        "type" : "object",
+        "properties" : {
+          "ogrn" : {
+            "type" : "integer",
+            "description" : "[translate:текущий ОГРН] компании",
+            "example" : 1001
+          },
+          "new_orgn" : {
+            "type" : "integer",
+            "description" : "[translate:новый ОГРН] компании",
+            "example" : 1002
+          },
+          "new_name" : {
+            "type" : "string",
+            "description" : "Новое название компании",
+            "example" : "OOO Компания"
+          }
+        }
+      },
+      "inline_response_200_3_data" : {
+        "type" : "object",
+        "properties" : {
+          "ogrn" : {
+            "type" : "string",
+            "example" : "1234567890123"
+          },
+          "name" : {
+            "type" : "string",
+            "example" : "ООО Ромашка"
+          }
+        }
+      },
+      "inline_response_200_13_pagination" : {
+        "type" : "object",
+        "properties" : {
+          "page" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "per_page" : {
+            "type" : "integer",
+            "example" : 10
+          },
+          "total" : {
+            "type" : "integer",
+            "example" : 25
+          },
+          "pages" : {
+            "type" : "integer",
+            "example" : 3
+          }
+        }
+      },
+      "inline_response_200_1" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "Company updated successfully"
+          }
+        }
+      },
+      "inline_response_200_10_data" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "example" : "2024-01-15"
+          },
+          "inn" : {
+            "type" : "integer",
+            "example" : 771234567890
+          },
+          "last_name" : {
+            "type" : "string",
+            "example" : "Иванов"
+          },
+          "first_name" : {
+            "type" : "string",
+            "example" : "Иван"
+          },
+          "middle_name" : {
+            "type" : "string",
+            "example" : "Иванович"
+          },
+          "department_id" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "company_ogrn" : {
+            "type" : "integer",
+            "example" : 1234567890123
+          },
+          "start_time" : {
+            "type" : "string",
+            "example" : "09:00"
+          },
+          "start" : {
+            "type" : "string",
+            "example" : "09:00"
+          },
+          "stop_time" : {
+            "type" : "string",
+            "example" : "18:00"
+          },
+          "stop" : {
+            "type" : "string",
+            "example" : "18:00"
+          },
+          "pause_journal" : {
+            "type" : "string",
+            "example" : "01:00"
+          },
+          "pause_schedule" : {
+            "type" : "string",
+            "example" : "01:00"
+          },
+          "required_work_minutes" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 480
+          },
+          "actual_work_minutes" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 480
+          },
+          "status" : {
+            "type" : "string",
+            "example" : "worked"
+          },
+          "note" : {
+            "type" : "string",
+            "example" : "Работа над проектом"
+          }
+        }
+      },
+      "inline_response_200_2" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "Company {ogrn} deleted successfully"
+          }
+        }
+      },
+      "inline_response_200_3" : {
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/inline_response_200_3_data"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/inline_response_200_13_pagination"
+          },
+          "count" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_200_4" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "User {user_id} deleted successfully"
+          }
+        }
+      },
+      "inline_response_200_13_schedules" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "start" : {
+            "type" : "string",
+            "example" : "09:00:00"
+          },
+          "stop" : {
+            "type" : "string",
+            "example" : "18:00:00"
+          },
+          "pause" : {
+            "type" : "string",
+            "example" : "01:00:00"
+          },
+          "free" : {
+            "type" : "boolean",
+            "example" : false
+          }
+        }
+      },
+      "inline_response_400_4" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "error" : {
+              "type" : "string",
+              "example" : "Missing inn"
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "NOT OK {название ошибки}"
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "No fields to update"
+            }
+          }
+        } ]
+      },
+      "inline_response_200_11" : {
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/inline_response_200_11_entries"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/inline_response_200_11_pagination"
+          }
+        }
+      },
+      "inline_response_400_3" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "error" : {
+              "type" : "string",
+              "example" : "Недопустимые параметры поиска"
+            },
+            "invalid_params" : {
+              "type" : "array",
+              "example" : [ "unknown_field", "invalid_sort" ],
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "allowed_params" : {
+              "type" : "array",
+              "example" : [ "page", "per_page", "inn", "last_name", "first_name", "middle_name", "department_id", "role", "company_ogrn", "schedule_id" ],
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "NOT OK {название ошибки}"
+            }
+          }
+        } ]
+      },
+      "inline_response_200_10" : {
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/inline_response_200_10_data"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/inline_response_200_11_pagination"
+          },
+          "count" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_404_2" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "User {user_id} not found"
+          }
+        }
+      },
+      "inline_response_400_6" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "NOT OK: ошибка базы данных"
+          }
+        }
+      },
+      "inline_response_200_13" : {
+        "type" : "object",
+        "properties" : {
+          "schedules" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/inline_response_200_13_schedules"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/inline_response_200_13_pagination"
+          }
+        }
+      },
+      "inline_response_404_1" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "Company {ogrn} not found"
+          }
+        }
+      },
+      "inline_response_400_5" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "NOT OK {название ошибки}"
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "Error" : {
+              "type" : "string",
+              "example" : "NOT JSON"
+            }
+          }
+        } ]
+      },
+      "inline_response_200_12" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "Schedule updated"
+          }
+        }
+      },
+      "inline_response_400_8" : {
+        "type" : "object",
+        "properties" : {
+          "error" : {
+            "type" : "string",
+            "example" : "Недопустимые параметры поиска"
+          },
+          "invalid_params" : {
+            "type" : "array",
+            "example" : [ "unknown_field", "invalid_sort" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "allowed_params" : {
+            "type" : "array",
+            "example" : [ "page", "per_page", "date", "inn", "department_id", "company_ogrn", "status", "last_name", "first_name", "middle_name" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "inline_response_404_3" : {
+        "type" : "object",
+        "properties" : {
+          "msg" : {
+            "type" : "string",
+            "example" : "Note with 1 not found"
+          }
+        }
+      },
+      "inline_response_400_7" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "error" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "inline_response_400_9" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "error" : {
+              "type" : "string"
+            },
+            "invalid_params" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "allowed_params" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "inline_response_200_14" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "Schedule deleted"
+          }
+        }
+      },
+      "inline_response_200_11_pagination" : {
+        "type" : "object",
+        "properties" : {
+          "page" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "per_page" : {
+            "type" : "integer",
+            "example" : 10
+          },
+          "total" : {
+            "type" : "integer",
+            "example" : 45
+          },
+          "pages" : {
+            "type" : "integer",
+            "example" : 5
+          }
+        }
+      },
+      "inline_response_201" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "Schedule added"
+          },
+          "id" : {
+            "type" : "integer",
+            "example" : 1
+          }
+        }
+      },
+      "inline_response_200" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "OK"
+          }
+        }
+      },
+      "inline_response_403" : {
+        "type" : "object",
+        "properties" : {
+          "Error" : {
+            "type" : "string",
+            "example" : "Доступ запрещён: недостаточно прав {роль пользователя}"
+          }
+        }
+      },
+      "auth_reg_body" : {
+        "required" : [ "company_ogrn", "department_id", "first_name", "inn", "last_name", "middle_name", "password" ],
+        "type" : "object",
+        "properties" : {
+          "inn" : {
+            "type" : "integer",
+            "description" : "ИНН пользователя (12 цифр)",
+            "example" : 771234567890
+          },
+          "last_name" : {
+            "type" : "string",
+            "description" : "Фамилия",
+            "example" : "Иванов"
+          },
+          "middle_name" : {
+            "type" : "string",
+            "description" : "Отчество",
+            "example" : "Иванович"
+          },
+          "first_name" : {
+            "type" : "string",
+            "description" : "Имя",
+            "example" : "Иван"
+          },
+          "department_id" : {
+            "type" : "integer",
+            "description" : "ID отдела",
+            "example" : 1
+          },
+          "company_ogrn" : {
+            "type" : "integer",
+            "description" : "ОГРН компании",
+            "example" : 1234567890123
+          },
+          "password" : {
+            "type" : "string",
+            "description" : "Пароль",
+            "format" : "password",
+            "example" : "mypassword123"
+          }
+        }
+      },
+      "inline_response_400_2" : {
+        "type" : "object",
+        "properties" : {
+          "error" : {
+            "type" : "string",
+            "example" : "Недопустимые параметры поиска"
+          },
+          "invalid_params" : {
+            "type" : "array",
+            "example" : [ "invalid_param", "unknown_field" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "allowed_params" : {
+            "type" : "array",
+            "example" : [ "page", "per_page", "name", "ogrn" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "inline_response_400" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string",
+            "example" : "NOT OK {название ошибки}"
+          }
+        }
+      },
+      "inline_response_400_1" : {
+        "oneOf" : [ {
+          "type" : "object",
+          "properties" : {
+            "Error" : {
+              "type" : "string",
+              "example" : "No fields to update"
+            }
+          }
+        }, {
+          "type" : "object",
+          "properties" : {
+            "message" : {
+              "type" : "string",
+              "example" : "Update failed {название ошибки}"
+            }
+          }
+        } ]
+      },
+      "inline_response_404" : {
+        "type" : "object",
+        "properties" : {
+          "Error" : {
+            "type" : "string",
+            "example" : "Company not found"
+          }
+        }
+      },
+      "patch_sch_body" : {
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "description" : "ID расписания для обновления",
+            "example" : 1
+          },
+          "start" : {
+            "type" : "string",
+            "description" : "Новое время начала работы",
+            "example" : "10:00:00"
+          },
+          "stop" : {
+            "type" : "string",
+            "description" : "Новое время окончания работы",
+            "example" : "17:00:00"
+          },
+          "pause" : {
+            "type" : "string",
+            "description" : "Новое время перерыва",
+            "example" : "00:45:00"
+          },
+          "free" : {
+            "type" : "boolean",
+            "description" : "Новый статус свободного слота",
+            "example" : true
+          }
+        }
+      },
+      "journal_put_body" : {
+        "required" : [ "date", "id", "note", "pause", "start", "status", "stop", "user_company_ogrn", "user_inn", "user_schedule_id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "description" : "ID записи журнала",
+            "example" : 1
+          },
+          "start" : {
+            "type" : "string",
+            "description" : "Время начала работы",
+            "example" : "09:00"
+          },
+          "stop" : {
+            "type" : "string",
+            "description" : "Время окончания работы",
+            "example" : "18:00"
+          },
+          "pause" : {
+            "type" : "string",
+            "description" : "Время перерыва",
+            "example" : "01:00"
+          },
+          "date" : {
+            "type" : "string",
+            "description" : "Дата записи",
+            "format" : "date",
+            "example" : "2024-01-15"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Статус записи",
+            "example" : "worked"
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Заметка",
+            "example" : "Работа над проектом"
+          },
+          "user_inn" : {
+            "type" : "integer",
+            "description" : "ИНН пользователя",
+            "example" : 771234567890
+          },
+          "user_company_ogrn" : {
+            "type" : "integer",
+            "description" : "ОГРН компании пользователя",
+            "example" : 1234567890123
+          },
+          "user_schedule_id" : {
+            "type" : "integer",
+            "description" : "ID расписания пользователя",
+            "example" : 1
+          }
+        }
+      },
+      "add_company_body" : {
+        "required" : [ "company_ogrn", "name" ],
+        "type" : "object",
+        "properties" : {
+          "company_ogrn" : {
+            "type" : "integer",
+            "description" : "[translate:ОГРН] компании",
+            "example" : 1234567890123
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Название компании",
+            "example" : "ООО Ромашка"
+          }
+        }
+      },
+      "add_schedule_body" : {
+        "required" : [ "pause", "start", "stop" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "description" : "ID расписания (опционально)",
+            "example" : 1
+          },
+          "start" : {
+            "type" : "string",
+            "description" : "Время начала работы",
+            "example" : "09:00:00"
+          },
+          "stop" : {
+            "type" : "string",
+            "description" : "Время окончания работы",
+            "example" : "18:00:00"
+          },
+          "pause" : {
+            "type" : "string",
+            "description" : "Время перерыва",
+            "example" : "01:00:00"
+          },
+          "free" : {
+            "type" : "boolean",
+            "description" : "Свободен ли слот",
+            "example" : false,
+            "default" : false
+          }
+        }
+      },
+      "jour_note_body" : {
+        "required" : [ "id", "note" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "description" : "ID записи журнала",
+            "example" : 1
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Новый текст заметки",
+            "example" : "Обновленный текст заметки"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
