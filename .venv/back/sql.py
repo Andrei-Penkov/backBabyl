@@ -5,7 +5,6 @@ from .auth import role_required
 sql_bp = Blueprint('sql_bp', __name__)
 
 @sql_bp.route('/sql')
-@role_required(['admin'])
 def sql():
     try:
         cur = get_cursor()
